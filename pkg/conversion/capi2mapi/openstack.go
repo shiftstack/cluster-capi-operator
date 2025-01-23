@@ -392,6 +392,10 @@ func convertCAPOPortOptsToMAPONetwork(fldPath *field.Path, capoPort capov1.PortO
 	mapoSubnets := make([]mapiv1alpha1.SubnetParam, len(capoPort.FixedIPs))
 
 	for i, capoFixedIP := range capoPort.FixedIPs {
+		if capoFixedIP.Subnet == nil {
+			continue
+		}
+
 		mapoSubnet := mapiv1alpha1.SubnetParam{
 			UUID: *capoFixedIP.Subnet.ID,
 			Filter: mapiv1alpha1.SubnetFilter{
@@ -472,7 +476,7 @@ func convertCAPOPortOptsToMAPOPort(fldPath *field.Path, capoPort capov1.PortOpts
 			continue
 		}
 
-		if capoFixedIP.Subnet.Filter != nil {
+		if capoFixedIP.Subnet.Filter != nil && capoFixedIP.Subnet.Filter.Name != "" {
 			errors = append(errors, field.Invalid(fldPath.Child("fixedIPs").Index(i).Child("subnet", "filter"), capoFixedIP.Subnet.Filter, "MAPO only supports defining subnets via IDs"))
 			continue
 		}

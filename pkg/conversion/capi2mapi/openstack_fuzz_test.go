@@ -16,6 +16,9 @@ limitations under the License.
 package capi2mapi_test
 
 import (
+	"bytes"
+	"math/rand"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -36,6 +39,8 @@ import (
 const (
 	openstackMachineKind  = "OpenStackMachine"
 	openstackTemplateKind = "OpenStackMachineTemplate"
+
+	latin = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01233456789"
 )
 
 var _ = Describe("OpenStack Fuzz (capi2mapi)", func() {
@@ -135,6 +140,39 @@ func openstackMachineFuzzerFuncs(codecs runtimeserializer.CodecFactory) []interf
 				network.Filter = &capov1.NetworkFilter{Name: uuid.NewString()}
 			}
 		},
+		func(port *capov1.PortOpts, c fuzz.Continue) {
+			c.FuzzNoCustom(port)
+
+			// Fields not yet supported for conversion.
+			port.HostID = nil
+			port.PropagateUplinkStatus = nil
+			port.ValueSpecs = nil
+		},
+		func(fixedIP *capov1.FixedIP, c fuzz.Continue) {
+			c.FuzzNoCustom(fixedIP)
+
+			fixedIP.Subnet = &capov1.SubnetParam{
+				ID:     ptr.To(uuid.NewString()),
+				Filter: &capov1.SubnetFilter{},
+			}
+		},
+		func(securityGroup *capov1.SecurityGroupParam, c fuzz.Continue) {
+			// We require either an ID or a Name, not both.
+			// FIXME: We allow use of security group names in MAPO when requested via the
+			// machine spec, but not when requested on a port. How do we express this?
+			// switch c.Int31n(2) {
+			// case 0:
+			// 	securityGroup.ID = ptr.To(uuid.NewString())
+			// 	securityGroup.Filter = nil
+			// case 1:
+			// 	securityGroup.ID = ptr.To("")
+			// 	securityGroup.Filter = &capov1.SecurityGroupFilter{
+			// 		Name: uuid.NewString(),
+			// 	}
+			// }
+			securityGroup.ID = ptr.To(uuid.NewString())
+			securityGroup.Filter = nil
+		},
 		func(spec *capov1.OpenStackMachineSpec, c fuzz.Continue) {
 			c.FuzzNoCustom(spec)
 
@@ -161,4 +199,22 @@ func openstackMachineTemplateFuzzerFuncs(codecs runtimeserializer.CodecFactory) 
 			m.TypeMeta.Kind = openstackTemplateKind
 		},
 	}
+}
+
+// generateFakeTags generate a fake alphanumeric CSV string for use in a tags field.
+func generateFakeTags() []capov1.NeutronTag {
+	tagCount := rand.Intn(10)
+	tags := make([]capov1.NeutronTag, tagCount)
+
+	for i := 0; i < tagCount; i++ {
+		var buffer bytes.Buffer
+		tagLen := rand.Intn(20) + 1
+		for j := 0; j < tagLen; j++ {
+			buffer.WriteString(string(latin[rand.Intn(len(latin))]))
+		}
+
+		tags = append(tags, capov1.NeutronTag(buffer.String()))
+	}
+
+	return tags
 }
