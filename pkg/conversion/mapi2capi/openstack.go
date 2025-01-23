@@ -679,7 +679,6 @@ func convertMAPORootVolumeToCAPO(fldPath *field.Path, mapoRootVolume *mapiv1alph
 	}
 
 	capoRootVolume := &capov1.RootVolume{}
-	// TODO(stephenfin): CAPO uses GiB, MAPO allegedly uses GB. Are they actually different (and therefore need conversion)?
 	capoRootVolume.SizeGiB = mapoRootVolume.Size
 	capoRootVolume.Type = mapoRootVolume.VolumeType
 
