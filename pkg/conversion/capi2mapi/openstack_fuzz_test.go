@@ -16,9 +16,6 @@ limitations under the License.
 package capi2mapi_test
 
 import (
-	"bytes"
-	"math/rand"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -39,8 +36,6 @@ import (
 const (
 	openstackMachineKind  = "OpenStackMachine"
 	openstackTemplateKind = "OpenStackMachineTemplate"
-
-	latin = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01233456789"
 )
 
 var _ = Describe("OpenStack Fuzz (capi2mapi)", func() {
@@ -110,6 +105,7 @@ func openstackProviderIDFuzzer(c fuzz.Continue) string {
 	return "openstack://" + uuid.NewString()
 }
 
+//nolint:funlen
 func openstackMachineFuzzerFuncs(codecs runtimeserializer.CodecFactory) []interface{} {
 	return []interface{}{
 		func(serverGroup *capov1.ServerGroupParam, c fuzz.Continue) {
@@ -199,22 +195,4 @@ func openstackMachineTemplateFuzzerFuncs(codecs runtimeserializer.CodecFactory) 
 			m.TypeMeta.Kind = openstackTemplateKind
 		},
 	}
-}
-
-// generateFakeTags generate a fake alphanumeric CSV string for use in a tags field.
-func generateFakeTags() []capov1.NeutronTag {
-	tagCount := rand.Intn(10)
-	tags := make([]capov1.NeutronTag, tagCount)
-
-	for i := 0; i < tagCount; i++ {
-		var buffer bytes.Buffer
-		tagLen := rand.Intn(20) + 1
-		for j := 0; j < tagLen; j++ {
-			buffer.WriteString(string(latin[rand.Intn(len(latin))]))
-		}
-
-		tags = append(tags, capov1.NeutronTag(buffer.String()))
-	}
-
-	return tags
 }
