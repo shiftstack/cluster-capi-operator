@@ -694,20 +694,18 @@ func convertMAPORootVolumeToCAPO(fldPath *field.Path, mapoRootVolume *mapiv1alph
 	// now ignored by MAPO itself and they have no equivalent in CAPO
 	if mapoRootVolume.DeprecatedDeviceType != "" {
 		// deviceType is deprecated and silently ignored.
-		// See
 		warnings = append(warnings, field.Invalid(fldPath.Child("deviceType"), mapoRootVolume.DeprecatedDeviceType, "deviceType is silently ignored by MAPO and will not be converted").Error())
 	}
 
 	if mapoRootVolume.DeprecatedSourceType != "" {
 		// sourceType is deprecated and silently ignored.
-		// See
 		warnings = append(warnings, field.Invalid(fldPath.Child("sourceType"), mapoRootVolume.DeprecatedSourceType, "sourceType is silently ignored by MAPO and will not be converted").Error())
 	}
 
 	if mapoRootVolume.SourceUUID != "" {
 		// SourceUUID is ignored if the property is set on the platform instead.
-		// See
-		// TODO(stephenfin): We should return this value and use it if spec.image is not set
+		// See https://github.com/openshift/machine-api-provider-openstack/blob/release-4.17/pkg/machine/convert.go#L163-L167
+		// NOTE(stephenfin): We may wish to return this value and use it if spec.image is not set
 		warnings = append(warnings, field.Invalid(fldPath.Child("sourceUUID"), mapoRootVolume.SourceUUID, "sourceUUID is superseded by spec.image in MAPO and will be ignored here").Error())
 	}
 
